@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>emberForum</title>
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!--<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">-->
+  <link rel="stylesheet" href="http://bootswatch.com/slate/bootstrap.min.css">
+</head>
+<body>
+  <script type="text/x-handlebars">
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="navbar-header">
+        {{#link-to 'index' classNames='navbar-brand'}}
+          EmberForum
+        {{/link-to}}
+      </div>
+
+      <ul class="nav navbar-nav">
+        {{#if userSignedIn}}
+          <li>
+            {{#link-to 'ask-question'}}
+              Ask Question
+            {{/link-to}}
+          </li>
+        {{/if}}
+
+        <li>
+          {{#link-to 'about'}}
+            About site
+          {{/link-to}}
+        </li>
+      </ul>
+
+      <ul class="nav navbar-nav">
+        {{#if userSignedIn}}
+          <li>
+            <a href="#" {{action signOut}}>
+              Welcome, {{signedInUser.fullname}} — Sign out
+            </a>
+          </li>
+        {{else}}
+          <li>
+            {{#link-to 'sign-in'}}Sign in{{/link-to}}
+          </li>
+        {{/if}}
+      </ul>
+    </nav>
+
+    {{outlet}}
+  </script>
+
+  <script type="text/x-handlebars" id="category">
+    <div class="row">
+      <div class="col-md-6">
+
+        <p>It is {{currentDate "LL"}}</p>
+
+        <ul>
+          {{#each}}
+            <h3>{{ title }}</h3>
+            
+            {{render 'questions' questions}}
+            
+          {{/each}}
+        </ul>
+        
+      <div class="col-md-6">
+        {{outlet}}
+      </div>
+    </div>
+  </script>
+
+  <script type="text/x-handlebars" id="questions">
+    <div class="row">
+      <div class="col-md-1">
+      </div>
+      <div class="col-md-5">
+
+        <h4> Latest questions</h4>
+
+        <ul>
+          {{#each lastQuestions}}
+            {{question-preview question=this}}
+          {{/each}}
+        </ul>
+      </div>
+
+      <div class="col-md-6">
+        {{outlet}}
+      </div>
+    </div>
+  </script>
+
+  <script type="text/x-handlebars" id="question">
+    <div class="row">
+      <div class="col-md-8">
+        <h2>{{title}}</h2>
+
+        {{#if isEditing}}
+          <form {{action submitEdits on="submit"}}>
+            <div class="form-group">
+              <label for="title">Question title</label>
+
+              {{textarea
+                id="question"
+                value=question
+                classNames="form-control"
+                placeholder="Describe your problem in as much detail as possible"}}
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              Update question
+            </button>
+          </form>
+        {{else}}
+          <p id="question">
+            {{question}}
+          </p>
+
+          <p>
+            Asked by {{author.fullname}}
+          </p>
+
+          {{#if canEditQuestion}}
+          <p>
+            <a href="#" {{action toggleEditQuestion}}>Edit question</a>
+          </p>
+          {{/if}}
+        {{/if}}
+      </div>
+    </div>
+
+    <hr>
+
+    {{render 'answers' answers}}
+
+    <hr>
+
+    {{view App.AnswerFormView}}
+  </script>
+
+  <script type="text/x-handlebars" id="about">
+    <div class="row">
+      <div class="col-md-8">
+        <h2>About EmberForum</h2>
+
+        <p>
+          EmberForum is a question and answer site for programmers
+        </p>
+      </div>
+    </div>
+  </script>
+
+  <script type="text/x-handlebars" id="sign-in">
+    <div class="row">
+      <div class="col-md-8">
+      {{#if controllers.application.userSignedIn}}
+        <p>You are already signed-in!</p>
+      {{else}}
+        <form {{action signIn on="submit"}}>
+          <div class="form-group">
+            <label for="email">Email address</label>
+
+            {{input id="email"
+              value=email
+              classNames="form-control"
+              placeholder="Enter your email address"}}
+          </div>
+
+          <button class="btn btn-primary" type="submit">
+            Sign in
+          </button>
+        </form>
+      {{/if}}
+      </div>
+    </div>
+  </script>
+
+  <script type="text/x-handlebars" id="ask-question">
+    <div class="row">
+      <div class="col-md-8">
+        <h2>
+          Ask New Question
+        </h2>
+
+        <form {{action askQuestion on="submit"}}>
+          <div class="form-group">
+            <label for="title">Question title</label>
+
+            {{input id="title"
+              value=title
+              classNames="form-control"
+              placeholder="Give your question an accurate name"}}
+          </div>
+
+          <div class="form-group">
+            <label for="question">Question</label>
+
+            {{textarea id="question"
+              value=question
+              classNames="form-control"
+              placeholder="Describe your problem in as much detail as possible"}}
+          </div>
+
+          {{#if question}}
+            <div class="form-group">
+              <p>Question preview:</p>
+              <p>{{question}}</p>
+            </div>
+          {{/if}}
+
+          <button class="btn btn-primary" type="submit">
+            Ask Question!
+          </button>
+        </form>
+      </div>
+
+      <div class="col-md-4">
+        <h2>
+          Maybe this will help
+        </h2>
+
+        {{#each latestQuestions}}
+        <div class="panel panel-default">
+          <div class="panel-body">
+            {{#link-to 'question' this}}
+              {{title}}
+            {{/link-to}}
+
+            {{question}}
+            <br>
+            — {{author.fullname}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+  </script>
+
+  <script type="text/x-handlebars" id="components/question-preview">
+    {{#link-to 'question' question}}
+      {{question.title}}
+    {{/link-to}}
+
+    {{#if hasAnswers}}
+    <span class="label label-default">{{answersCount}} {{pluralForm}}</span>
+    {{/if}}
+
+    (asked by {{question.author.fullname}})
+  </script>
+
+  <script type="text/x-handlebars" id="answers">
+    <div class="row">
+      <div class="col-md-8">
+        {{#each}}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              {{author.fullname}} on {{date}}
+            </div>
+
+            <div class="panel-body">
+              {{answer}}
+            </div>
+          </div>
+        {{else}}
+          <h4>Sorry, there are no answer to this question</h4>
+        {{/each}}
+      </div>
+    </div>
+  </script>
+
+  <script type="text/x-handlebars" id="answer_form">
+    <div class="row">
+      <div class="col-md-8">
+        <h4>Submit your answer:</h4>
+
+        <form {{action answerQuestion on="submit"}}>
+          <div class="form-group">
+            {{textarea id="answer" value=answer classNames="form-control"}}
+          </div>
+
+          <button class="btn btn-primary" type="submit">
+            Submit
+          </button>
+        </form>
+      </div>
+    </div>
+  </script>
+
+  <script src="js/libs/jquery-1.10.2.js"></script>
+  <script src="js/libs/handlebars-1.1.2.js"></script>
+  <script src="js/libs/ember-1.4.0.js"></script>
+  <script src="http://builds.emberjs.com/beta/ember-data.js"></script>
+  <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js"></script>
+
+  <script src="js/app.js"></script>
+
+  <script src="js/helpers.js"></script>
+
+  <script src="js/components/question.js"></script>
+
+  <script src="js/models/question.js"></script>
+  <script src="js/models/user.js"></script>
+  <script src="js/models/answer.js"></script>
+  <script src="js/models/category.js"></script>
+
+  <script src="js/fixtures/question.js"></script>
+  <script src="js/fixtures/user.js"></script>
+  <script src="js/fixtures/answer.js"></script>
+  <script src="js/fixtures/category.js"></script>
+
+  <script src="js/routes/application.js"></script>
+  <script src="js/routes/question.js"></script>
+  <script src="js/routes/category.js"></script>
+
+  <script src="js/controllers/application.js"></script>
+  <script src="js/controllers/sign_in.js"></script>
+  <script src="js/controllers/question.js"></script>
+  <script src="js/controllers/answer.js"></script>
+
+  <script src="js/views/answer.js"></script>
+</body>
+</html>
